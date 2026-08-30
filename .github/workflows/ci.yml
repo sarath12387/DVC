@@ -44,7 +44,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/cats-dogs-api:latest
+          tags: sarathmurthy/cats-dogs-api:latest
 
   deploy:
     needs: build-and-push
@@ -54,13 +54,13 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Pull new image and update the running service
+      - name: Pull new image and update service
         run: |
           docker compose pull
           docker compose up -d
 
-      - name: Wait for service to come up
+      - name: Wait for service
         run: sleep 10
 
-      - name: Post-deploy smoke test
+      - name: Smoke test
         run: python scripts/smoke_test.py --url http://localhost:8000
