@@ -3,7 +3,7 @@
 # runs `docker compose pull && docker compose up -d` to update this service.
 services:
   inference:
-    image: ${DOCKER_IMAGE:-YOUR_DOCKERHUB_USERNAME/cats-dogs-api:latest}
+    image: ${DOCKER_IMAGE:-sarathmurthy/cats-dogs-api:latest}
     container_name: cats-dogs-api
     ports:
       - "8000:8000"
