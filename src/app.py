@@ -53,14 +53,13 @@ classes = None
 
 @app.on_event("startup")
 def startup() -> None:
-    """Load the model once at container start."""
     global model, classes
     if MODEL_PATH.exists():
         model, classes = load_model(MODEL_PATH)
-        logger.info("Model loaded from %s (classes=%s)", MODEL_PATH, classes)
+        logger.info("Model loaded from %s", MODEL_PATH)
     else:
-        logger.error("Model file not found at %s — /predict will return 503",
-                     MODEL_PATH)
+        logger.warning("Model not found at %s — running without model", MODEL_PATH)
+        model, classes = None, None
 
 
 @app.middleware("http")
