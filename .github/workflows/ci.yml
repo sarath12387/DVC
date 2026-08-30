@@ -28,10 +28,10 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.11
+      - name: Set up Python 3.13
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.13"
           cache: pip
 
       - name: Install dependencies
@@ -42,7 +42,7 @@ jobs:
 
   # ------------------------------------------- M3.2 + M3.3: build & publish
   build-and-push:
-    needs: test                       # image is only built if tests pass
+    needs: test # image is only built if tests pass
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
@@ -71,7 +71,7 @@ jobs:
   # ------------------------------------------------ M4: deploy + smoke test
   deploy:
     needs: build-and-push
-    runs-on: self-hosted              # your own machine/VM running the runner
+    runs-on: self-hosted # your own machine/VM running the runner
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
       - name: Check out repository
