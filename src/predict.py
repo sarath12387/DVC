@@ -29,7 +29,7 @@ _transform = transforms.Compose([
 
 def load_model(model_path: Path, device: str = "cpu"):
     """Load the serialized checkpoint. Returns (model, class_names)."""
-    ckpt = torch.load(model_path, map_location=device)
+    ckpt = torch.load(model_path, map_location=device, weights_only=False)
     classes = ckpt["classes"]
     model = SimpleCNN(num_classes=len(classes))
     model.load_state_dict(ckpt["state_dict"])
