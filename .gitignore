@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+mlruns/
+*.png
+models/*.pt
+# data/ is versioned by DVC, not Git
+data/raw/
+data/processed/
+!data/raw/.gitkeep
+!data/processed/.gitkeep

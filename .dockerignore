@@ -1,0 +1,8 @@
+data/
+mlruns/
+tests/
+.git/
+.github/
+.dvc/
+__pycache__/
+*.png

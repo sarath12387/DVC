@@ -1,0 +1,90 @@
+# ci.yml — M3: CI (test, build, publish) + M4: CD (deploy + smoke test)
+#
+# Required GitHub repo secrets (Settings -> Secrets and variables -> Actions):
+#   DOCKERHUB_USERNAME   your Docker Hub username
+#   DOCKERHUB_TOKEN      a Docker Hub access token (not your password)
+#
+# M4 note: the `deploy` job targets a SELF-HOSTED runner (your laptop/VM)
+# so `docker compose up -d` actually updates a running service you can open
+# in the browser. Set one up: repo Settings -> Actions -> Runners -> New
+# self-hosted runner, then follow the 4 commands shown there.
+
+name: CI-CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/cats-dogs-api
+
+jobs:
+  # ---------------------------------------------------------- M3.1: unit tests
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run unit tests (pytest)
+        run: pytest tests/ -v
+
+  # ------------------------------------------- M3.2 + M3.3: build & publish
+  build-and-push:
+    needs: test                       # image is only built if tests pass
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      # The trained model is needed inside the image. Committing models/model.pt
+      # via Git-LFS is the simplest option; if you use DVC with a remote,
+      # replace this comment with `dvc pull` steps.
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build Docker image
+        run: |
+          docker build -t $IMAGE_NAME:${{ github.sha }} -t $IMAGE_NAME:latest .
+
+      - name: Push image to Docker Hub (artifact publishing)
+        run: |
+          docker push $IMAGE_NAME:${{ github.sha }}
+          docker push $IMAGE_NAME:latest
+
+  # ------------------------------------------------ M4: deploy + smoke test
+  deploy:
+    needs: build-and-push
+    runs-on: self-hosted              # your own machine/VM running the runner
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Pull new image and update the running service
+        run: |
+          export DOCKER_IMAGE=$IMAGE_NAME:latest
+          docker compose pull
+          docker compose up -d
+
+      - name: Wait for service to come up
+        run: sleep 10
+
+      - name: Post-deploy smoke test (pipeline fails if this fails)
+        run: python scripts/smoke_test.py --url http://localhost:8000
