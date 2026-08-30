@@ -3,7 +3,6 @@ __pycache__/
 .pytest_cache/
 mlruns/
 *.png
-models/*.pt
 # data/ is versioned by DVC, not Git
 data/raw/
 data/processed/
